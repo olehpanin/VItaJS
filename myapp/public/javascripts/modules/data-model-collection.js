@@ -103,8 +103,6 @@ function(u, E, DataModel, DataSchema) {
                     schema : this._schema,
                     data : res
                 });
-
-                //return res;
             },
 
             push : function(val) {

@@ -66,14 +66,15 @@ io.sockets.on('connection', function(socket) {
         fs.stat('public' + url, function(err, stats) {
             if (err) throw err;
             if (stats.ctime.getTime() > date) {
-                onUpdate(url, date);
+                onUpdate(url, stats.ctime.getTime());
             } else {
+                console.log('on notupdate');
                 onNotUpdate(url, date);
             }
         });
     }
 
-    fileSystemProxy.on('change', function(url) {
+    function fileSystemHandler(url) {
         getFile(url, function(url, data, date) {
             socket.emit('template-' + url + '-update', {
                 update : true,
@@ -81,7 +82,13 @@ io.sockets.on('connection', function(socket) {
                 date : date
             })
         })
+    }
+
+    socket.on('disconnect', function(e) {
+        fileSystemProxy.removeListener('change', fileSystemHandler);
     });
+
+    fileSystemProxy.on('change', fileSystemHandler);
 
 	socket.on('template-check', function(url, date) {
 		if (!date) {

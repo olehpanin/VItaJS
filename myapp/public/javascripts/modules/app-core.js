@@ -11,7 +11,6 @@ answer('app-core', ['s#utils', 's#new-event', 's#socket.io', 's#template-engine'
 
         var _render = function(content) {
             _head.innerHTML = content;
-            //te.compile(_head, appCoreController);
             newTE.compile(_head, appCoreController, {});
         };
 
@@ -19,10 +18,19 @@ answer('app-core', ['s#utils', 's#new-event', 's#socket.io', 's#template-engine'
 
             init : function(url, view, config) {
                 _socket = io.connect(url);
+                /*
+                make proxy-loading or not configurable ( by init param )
+                 */
                 ask(['s#proxy-loader'], function(p) {
-
                     p(view, 'template', function(content) {
                         _render(content);
+                    }, function(content) {
+                        alert('content-update');
+                        window.location.reload();
+                        /*
+                        notificate user that there is a newest version of template stored in browser cache
+                        Click here to restart the portal
+                         */
                     });
                 });
                 return this;

@@ -79,7 +79,6 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
         },
 
         iterate: function(head, controller, $scope) {
-
             u.forEach(head.childNodes, function(el, key, context) {
                 if (el.nodeName === '#comment') return;
 
@@ -140,8 +139,57 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
 
     });
 
-    retObj.addAttrModule('data-vita-form', function(el, attr, controller) {
+    retObj.addAttrModule('data-vita-form', function(el, dataModelFormAttr, controller) {
+        console.log(arguments);
+        $(el).on('submit', function(e) {
+            var i,
+                nodeType,
+                setObj = {},
+                key,
+                value,
+                fieldType;
 
+            for (i = 0; i < e.target.length; i++ ) {
+                nodeType = e.target[i].getAttribute('type');
+                key = e.target[i].getAttribute('data-model-form-key');
+                value = e.target[i].value;
+                switch(nodeType) {
+                    case 'checkbox' :
+                    case 'radio' :
+                        /*console.info(e.target[i].checked + ' ' + e.target[i].value);*/
+                        if (e.target[i].checked) {
+                            //@TODO fieldType = model.getSchema().getFieldType(dataModelFormAttr, key);
+                            /*fieldType = _controller.model.getFieldType(dataModelFormAttr, key);
+                             switch (fieldType) {
+                             case 'Array' :
+                             if (!(key in setObj)) {
+                             setObj[key] = [];
+                             }
+                             setObj[key].push(value);
+                             break;
+                             default :
+                             setObj[key] = value;
+                             break;
+                             }*/
+
+                        }
+                        break;
+                    case 'submit' :
+                        break;
+                    default:
+                        /*console.log(e.target[i].getAttribute('data-model-form-key') +
+                         ' ' + e.target[i].value);*/
+                        setObj[key] = value;
+                        break;
+                }
+            }
+
+            console.log(setObj);
+
+            controller.model.get(dataModelFormAttr).push(setObj);
+            el.reset();
+            return false;
+        })
     });
 
     return retObj;
