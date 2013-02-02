@@ -16,6 +16,8 @@ answer('app-core-model', ['s#utils', 's#new-event', 's#data-model-collection'], 
         },
         _model = u.mixin({}, true, true, new E(), {
 
+            _callbacks : [],
+
             init : function(name, cashed) {
 
             },

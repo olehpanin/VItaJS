@@ -2,7 +2,6 @@
     Hello Vita !
     <h1>{{#i18n.title}} - values from i18n - {{#i18n.subtitle}}</h1>
     <div>{{#conf.maxVal}} - value from conf</div>
-    <input type="text" placeholder="Input a value" data-model="param"/>
     <!--
     <div class="debug-{{#model.debugMode}}" data-repeat="user in users">
         <br />
@@ -39,14 +38,16 @@
 
     </form>
 
-    <div data-vita-event="vitaUsers:change">Total {{#model.vitaUsers.size()}}</div>
+    <div data-vita-event="vitaUsers:change">Total {{vitaUsers.size()}}</div>
     <br />
     <div data-vita-repeat="vitaUser in vitaUsers">
-        <div>
+        <div class="{{vitaUser.toDelete}}">
             <span>Name: {{vitaUser.name}}</span>&nbsp;
             <span>Age: {{vitaUser.age}}</span>&nbsp;
             <span>EDIT</span>&nbsp;
-            <span>DELETE</span>
+            <span data-vita-click="#model vitaUsers.remove(vitaUser)">DELETE</span>&nbsp;
+            <span data-vita-click="#controller markAsDelete(vitaUser)">Mark As Delete</span>
         </div>
     </div>
+    <button data-vita-click="#controller deleteMarkedUsers()">Delete marked users</button>
 </div>

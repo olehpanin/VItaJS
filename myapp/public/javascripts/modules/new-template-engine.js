@@ -8,12 +8,13 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
         /**
          *
          * @param attribute
-         * @param tag
          * @param callback (controller, ..)
+         * @oaram block (boolean) iterate block status
          */
-        addAttrModule : function(attribute, callback) {
+        addAttrModule : function(attribute, callback, block) {
             _modules[attribute] = {
-                callback : callback
+                callback : callback,
+                block : block
             }
         },
 
@@ -27,13 +28,16 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             return false;
         },
 
-        checkAttributes : function(el, controller) {
+        checkAttributes : function(el, controller, $scope) {
+            var iterateBLockStatus = false;
             u.forEach(_modules, function(val, key, context) {
                 var attr = el.getAttribute(key);
                 if (attr) {
-                    _modules[key].callback.call(context, el, attr, controller);
+                    iterateBLockStatus = _modules[key].block;
+                    _modules[key].callback.call(context, el, attr, controller, $scope);
                 }
             }, this);
+            return iterateBLockStatus;
         },
 
         getScopeVal : function(tr, el, $scope, controller) {
@@ -78,12 +82,45 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             }
         },
 
+        getExObj : function(str, el, controller, $scope) {
+            var arr = u.without(str.split(/[\(, \)]/), ''),
+                module = arr.shift(),
+                func = arr.shift(),
+                funcArr,
+                paramsArr= [];
+
+            u.forEach(arr, function(val) {
+                if (val in $scope) val = $scope[val].model;
+                paramsArr.push(val);
+            });
+
+            //console.log(module, func, arr);
+            switch (module) {
+                case '#controller' :
+                    paramsArr.unshift(el);
+                    return {
+                        function : controller[func],
+                        params : paramsArr,
+                        context : controller
+                    };
+                case '#model' :
+                    funcArr = func.split('.');
+                    return {
+                        function : controller.model.get(funcArr[0])[funcArr[1]],
+                        params : paramsArr,
+                        context : controller.model.get(funcArr[0])
+                    };
+                default:
+                    break;
+            }
+        },
+
         iterate: function(head, controller, $scope) {
             u.forEach(head.childNodes, function(el, key, context) {
                 if (el.nodeName === '#comment') return;
 
-                if (!context.isTextNode(el)) {
-                    context.checkAttributes(el, controller);
+                if (!context.isTextNode(el) && context.checkAttributes(el, controller, $scope)) {
+                    return ;
                 }
 
                 if (el.childNodes.length > 0) {
@@ -137,10 +174,9 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
         });
         go(collection, el, cloneEl);
 
-    });
+    }, true);
 
     retObj.addAttrModule('data-vita-form', function(el, dataModelFormAttr, controller) {
-        console.log(arguments);
         $(el).on('submit', function(e) {
             var i,
                 nodeType,
@@ -184,12 +220,24 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
                 }
             }
 
-            console.log(setObj);
+            //console.log(setObj);
 
             controller.model.get(dataModelFormAttr).push(setObj);
             el.reset();
             return false;
         })
+    });
+
+    retObj.addAttrModule('data-vita-click', function(el, attr, controller, $scope) {
+        //console.log('data-vita-click', attr, el, $scope);
+        var self = this,
+            exObj = this.getExObj(attr, el, controller, $scope);
+
+        //console.log(attr, exObj);
+        $(el).on('click', function(e) {
+            //console.log(exObj.function)
+            exObj.function.apply(exObj.context, exObj.params);
+        });
     });
 
     return retObj;

@@ -4,7 +4,7 @@ answer('data-model', ['s#utils', 's#new-event', 's#data-schema'], function(u, E,
 
         this._schema = params.schema instanceof DataSchema ? params.schema : new DataSchema(params.schema);
         this._data = {};
-        this._callbacks = {};
+        this._callbacks = params.callback || {};
 
         if('error' in params) {
             this.on('error', params.error);

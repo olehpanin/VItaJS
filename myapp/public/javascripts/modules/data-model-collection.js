@@ -5,7 +5,7 @@ function(u, E, DataModel, DataSchema) {
 
         this._data = [];
         this._schema = new DataSchema(params.schema);
-        this._callbacks = {};
+        this._callbacks = params.callbacks || {};
 
         if ('error' in params) {
             this.on('error', params.error);
@@ -101,7 +101,8 @@ function(u, E, DataModel, DataSchema) {
                 if (res.length === 1) return res[0];
                 return new DataModelCollection({
                     schema : this._schema,
-                    data : res
+                    data : res,
+                    callbacks : this._callbacks
                 });
             },
 
@@ -155,13 +156,53 @@ function(u, E, DataModel, DataSchema) {
                 });
                 return new DataModelCollection({
                     schema : this._schema,
-                    data : res
+                    data : res,
+                    callbacks : this._callbacks
                 });
                 //return res;
             },
 
             forEach : function(callback) {
                 u.forEach(this._data, callback, this);
+            },
+
+            remove : function(dataModel) {
+                var newData = [],
+                    changeStatus = false;
+                u.forEach(this._data, function(model) {
+                    if (model !== dataModel) newData.push(model);
+                    else changeStatus = true;
+                });
+                this._data = newData;
+                (changeStatus) && (this.trigger('change', {
+                    data : this.get()
+                }));
+
+                return this;
+            },
+
+            removeWhere : function(obj) {
+                var newData = [];
+                this.forEach(function(val, key, context) {
+                    if (!u.has(val.get(), obj)) {
+                        newData.push(val);
+                    }
+                });
+                if (newData.length !== this.size()) {
+                    this._data = newData;
+                    this.trigger('change', {
+                       data : this.get()
+                    });
+                }
+            },
+
+            without : function(obj) {
+                /*var newData = u.without(this._data, obj);
+                return new DataModelCollection({
+                    schema : this._schema,
+                    data : newData,
+                    callbacks : this._callbacks
+                });*/
             }
         }
 

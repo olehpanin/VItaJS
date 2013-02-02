@@ -48,8 +48,8 @@ answer('utils', [], function() {
                 i;
             if (this.isEmpty(param)) return false;
             if (this.isObject(param)) {
-                this.forEach(param, function(val) {
-                    if (!(val in obj)) status = false;
+                this.forEach(param, function(val, key) {
+                    if (!((key in obj) && (obj[key] === val))) status = false;
                 });
                 return status;
             } else if (this.isArray(obj)) {
