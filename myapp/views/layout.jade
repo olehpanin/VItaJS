@@ -1,0 +1,33 @@
+doctype 5
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        script(type='text/javascript', src='/javascripts/lib/AskJS/ask.js')
+        script(type='text/javascript')
+            ask.config({
+                urls : {
+                    'modules' : '/javascripts/modules/',
+                    'jQuery' : '/javascripts/lib/jQuery/',
+                    'ask' : '/javascripts/lib/AskJS/',
+                    'templates' : '/javascripts/templates/',
+                    'socketio' : '/socket.io/'
+                },
+                baseUrl : '/javascripts/modules/'
+            });
+
+            ask([
+                'ask^ask.script',
+                 'ask^ask.template',
+                'jQuery^jQuery-full.v1.8.1',
+                '../../socket.io/socket.io'
+            ], function() {
+                ask([
+                    's#modules^app-core'
+                ], function(a) {
+                    a.init('http://localhost', '/javascripts/templates/test.xhtml');
+                });
+            });
+
+    body
+        block content
