@@ -15,9 +15,8 @@ answer('app-core-controller', ['s#utils','s#new-event', 's#app-core-model'], fun
 		model : model,
 
         markAsDelete : function(el, user) {
-            var toDelete = user.get('to-delete');
-            if (!toDelete) user.set('to-delete', true);
-            else user.set('to-delete', false);
+            console.log('mark-as-delete');
+            user.set('to-delete', !(user.get('to-delete')));
         },
 
         deleteMarkedUsers : function() {

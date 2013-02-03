@@ -115,13 +115,39 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             }
         },
 
-        iterate: function(head, controller, $scope) {
-            u.forEach(head.childNodes, function(el, key, context) {
-                if (el.nodeName === '#comment') return;
+        checkAttrsBinding : function(el, controller, $scope) {
+            var attrs = el.attributes,
+                i,
+                val;
 
-                if (!context.isTextNode(el) && context.checkAttributes(el, controller, $scope)) {
-                    return ;
+            for (i = 0; i < attrs.length; i++) {
+                val = attrs.item(i).value;
+
+                if (this.isBind(val)) {
+                    console.log(val, attrs.item(i), el);
                 }
+            }
+        },
+
+        checkAttrs : function(el, controller, $scope) {
+            if (el.nodeName === '#comment') return false;
+
+            if (!this.isTextNode(el) && this.checkAttributes(el, controller, $scope)) {
+                return false;
+            }
+            if (!this.isTextNode(el))
+                this.checkAttrsBinding(el, controller, $scope);
+
+            return true;
+        },
+
+        iterate : function(head, controller, $scope) {
+
+
+            //checkAttrs(head, this);
+
+            u.forEach(head.childNodes, function(el, key, context) {
+                if (!context.checkAttrs(el, controller, $scope)) return;
 
                 if (el.childNodes.length > 0) {
                     context.iterate(el, controller, $scope);
@@ -135,6 +161,7 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
 
         compile : function(head, controller, $scope) {
             $scope = u.isObject($scope) ? $scope : {};
+            this.checkAttrs(head, controller, $scope);
             this.iterate(head, controller, $scope);
         }
 
@@ -163,6 +190,7 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
                         collection : collection,
                         model : dataModel
                     };
+                    self.checkAttrs(cloneChildNode, controller, scopeObj);
                     self.iterate(cloneChildNode, controller, scopeObj);
                     el.appendChild(cloneChildNode);
                 }
