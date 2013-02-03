@@ -1,4 +1,4 @@
-<div class="entry">
+<div class="container">
     Hello Vita !
     <h1>{{#i18n.title}} - values from i18n - {{#i18n.subtitle}}</h1>
     <div>{{#conf.maxVal}} - value from conf</div>
@@ -41,7 +41,7 @@
     <div data-vita-event="vitaUsers:change">Total {{vitaUsers.size()}}</div>
     <br />
     <div data-vita-repeat="vitaUser in vitaUsers">
-        <div class="to-delete-{{vitaUser.toDelete}}">
+        <div class="to-delete-{{vitaUser.to-delete}}">
             <span>Name: {{vitaUser.name}}</span>&nbsp;
             <span>Age: {{vitaUser.age}}</span>&nbsp;
             <span>EDIT</span>&nbsp;

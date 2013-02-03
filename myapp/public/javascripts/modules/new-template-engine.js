@@ -24,7 +24,7 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
         },
 
         isBind : function(str) {
-            if (/{{[\w.#]*}}/.test(str)) return true;
+            if (/{{.*}}/.test(str)) return true;
             return false;
         },
 
@@ -40,15 +40,16 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             return iterateBLockStatus;
         },
 
-        getScopeVal : function(tr, el, $scope, controller) {
+        getScopeVal : function(tr, el, $scope, controller, cashedElData, setter) {
             var trArr= tr.split('.'),
                 scopeKey = trArr.shift(),
-                dataModelField = trArr.shift(),
-                cashedElData = el.data;
-
+                dataModelField = trArr.shift();
+                //cashedElData = el.data;
+            //console.log(dataModelField, cashedElData, setter);
             function callback() {
-                console.log('callback called', this.el.data, this.dataModelField);
-                this.el.data = this.cashedElData.replace('{{' + tr + '}}', this.$scope[this.scopeKey].model.get(this.dataModelField));
+                //console.log('callback called', this.el[this.elProperty], this.dataModelField);
+                setter(el, this.cashedElData.replace('{{' + tr + '}}',
+                    this.$scope[this.scopeKey].model.get(this.dataModelField)));
             }
 
             callback = u.bind(callback, {
@@ -72,13 +73,13 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             return $scope[scopeKey].model.get(dataModelField);
         },
 
-        executeModule : function(tr, el, $scope, controller) {
+        executeModule : function(tr, el, $scope, controller, cashedElData, setter) {
             //console.info('executeModule', arguments);
             var scopeObj;
             if (tr.indexOf('#') === 0) {
 
             } else {
-                return this.getScopeVal(tr, el, $scope, controller);
+                return this.getScopeVal(tr, el, $scope, controller, cashedElData, setter);
             }
         },
 
@@ -118,13 +119,21 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
         checkAttrsBinding : function(el, controller, $scope) {
             var attrs = el.attributes,
                 i,
-                val;
+                val,
+                self = this;
 
             for (i = 0; i < attrs.length; i++) {
                 val = attrs.item(i).value;
 
                 if (this.isBind(val)) {
-                    console.log(val, attrs.item(i), el);
+                    attrs.item(i).value = val.replace(/{{.*}}/g, function(tr) {
+                        return self.executeModule(tr.substr(2, tr.length - 4), el, $scope, controller,
+                            attrs.item(i).value, u.bind(function(el, val) {
+                                el.setAttribute(this.attr, val);
+                            }, {
+                               attr : attrs.item(i).name
+                            }));
+                    });
                 }
             }
         },
@@ -142,10 +151,6 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
         },
 
         iterate : function(head, controller, $scope) {
-
-
-            //checkAttrs(head, this);
-
             u.forEach(head.childNodes, function(el, key, context) {
                 if (!context.checkAttrs(el, controller, $scope)) return;
 
@@ -153,7 +158,10 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
                     context.iterate(el, controller, $scope);
                 } else if (context.isTextNode(el) && context.isBind(el.data)) {
                     el.data = el.data.replace(/{{[\w#.]*}}/g, function(tr) {
-                        return context.executeModule(tr.substr(2, tr.length - 4), el, $scope, controller);
+                        return context.executeModule(tr.substr(2, tr.length - 4), el, $scope, controller,
+                            el.data, function(el, val) {
+                                el.data = val;
+                            });
                     });
                 }
             }, this);

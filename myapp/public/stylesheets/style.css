@@ -1,8 +1,7 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+.to-delete-undefined, to-delete-false {
+
 }
 
-a {
-  color: #00B7FF;
+.to-delete-true {
+    text-decoration: line-through;
 }
