@@ -34,12 +34,14 @@
         <input data-model-form-key="gender" type="radio" name="gender" value="male" checked="">Male</input>
         <input data-model-form-key="gender" type="radio" name="gender" value="female">Female</input>
         -->
-        <div><input type="submit" value="Create New User"/></div>
+        <div><input type="submit" value="Create New User" class="btn btn-small btn-primary"/></div>
 
     </form>
 
     <div data-vita-event="vitaUsers:change">Total {{vitaUsers.size()}}</div>
     <br />
+
+
     <div data-vita-repeat="vitaUser in vitaUsers">
         <div class="to-delete-{{vitaUser.to-delete}}">
             <span>Name: {{vitaUser.name}}</span>&nbsp;
@@ -49,5 +51,5 @@
             <span data-vita-click="#controller markAsDelete(vitaUser)">Mark As Delete</span>
         </div>
     </div>
-    <button data-vita-click="#controller deleteMarkedUsers()">Delete marked users</button>
+    <button class="btn btn-small btn-primary" data-vita-click="#controller deleteMarkedUsers()">Delete marked users</button>
 </div>
