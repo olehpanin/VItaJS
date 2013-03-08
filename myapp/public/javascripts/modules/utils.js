@@ -53,7 +53,7 @@ answer('utils', [], function() {
                 });
                 return status;
             } else if (this.isArray(obj)) {
-                for (i = 0; i < obj,length; i++) {
+                for (i = 0; i < obj.length; i++) {
                     if (obj[i] === param) return true;
                 }
             } else {
@@ -71,9 +71,10 @@ answer('utils', [], function() {
         },
 
         /**
-		 * @param array
-		 * @param *values
-		 */
+         *
+         * @param array
+         * @return {Array}
+         */
 		without : function(array) {
 			var values = slice.call(arguments, 1),
 				newArr = [],
@@ -162,11 +163,12 @@ answer('utils', [], function() {
 		},
 
 		// function utils
-		/**
-		 * @param func
-		 * @param obj
-		 * @param *args
-		 */
+        /**
+         *
+         * @param func
+         * @param context
+         * @return {Function}
+         */
 		bind : function(func, context) {
 		   var args = slice.call(arguments, 2);
 					
