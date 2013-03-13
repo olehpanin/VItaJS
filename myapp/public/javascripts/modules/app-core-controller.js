@@ -14,19 +14,19 @@ answer('app-core-controller', ['s#utils','s#new-event', 's#app-core-model'], fun
 
 		model : model,
 
-        markAsDelete : function(el, user) {
-            console.log('mark-as-delete');
+        markAsDelete : function(user) {
+            //console.log('mark-as-delete', arguments);
             user.set('to-delete', !(user.get('to-delete')));
         },
 
         deleteMarkedUsers : function() {
-            console.log('size to-delete', this.model.get('vitaUsers').where({
+            /*console.log('size to-delete', this.model.get('vitaUsers').where({
                 'to-delete' : true
-            }).size());
+            }).size());*/
             this.model.get('vitaUsers').removeWhere({
                 'to-delete' : true
             });
-            console.log('after', this.model.get('vitaUsers').size());
+            /*console.log('after', this.model.get('vitaUsers').size());*/
         }
 
     };

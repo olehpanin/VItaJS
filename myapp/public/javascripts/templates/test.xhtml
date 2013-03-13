@@ -2,54 +2,25 @@
     Hello Vita !
     <h1>{{#i18n.title}} - values from i18n - {{#i18n.subtitle}}</h1>
     <div>{{#conf.maxVal}} - value from conf</div>
-    <!--
-    <div class="debug-{{#model.debugMode}}" data-repeat="user in users">
-        <br />
-        <span>{{user.name}}&nbsp;</span>
-        <span>{{user.age}}&nbsp;</span>
-        <span>{{user.rights}}&nbsp;</span>
-        <span data-repeat="lang in user.languages">
-            <span>{{lang}}&nbsp;</span>
-        </span>
-        <span>{{user.gender}}&nbsp;</span>
-    </div>
-    <div>Input: {{#model.param}}</div>
-    <div>Total: {{#model.users.length}}</div>
-    <br />
-    -->
     Set-model form - New User
-    <form data-vita-form="vitaUsers">
+
+    <form data-vita-form="model.vitaUsers">
         <div><input data-model-form-key="name" type="text" placeholder="Name" /></div>
         <div><input data-model-form-key="age" type="text" placeholder="age" /></div>
-        <!--
-        <div><input data-model-form-key="languages" type="checkbox" value="ru" />ru</div>
-        <div><input data-model-form-key="languages" type="checkbox" value="eng" />eng</div>
-        <div><input data-model-form-key="languages" type="checkbox" value="ua" />ua</div>
-        <div>
-            <select data-model-form-key="rights">
-                <option value="admin">Admin</option>
-                <option value="user">User</option>
-            </select>
-        </div>
-        <input data-model-form-key="gender" type="radio" name="gender" value="male" checked="">Male</input>
-        <input data-model-form-key="gender" type="radio" name="gender" value="female">Female</input>
-        -->
         <div><input type="submit" value="Create New User" class="btn btn-small btn-primary"/></div>
-
     </form>
 
-    <div data-vita-event="vitaUsers:change">Total {{vitaUsers.size()}}</div>
+    <div data-vita-event="model.vitaUsers:change">Total {{model.vitaUsers.size()}}</div>
     <br />
 
-
-    <div data-vita-repeat="vitaUser in vitaUsers">
+    <div data-vita-repeat="vitaUser in model.vitaUsers">
         <div class="to-delete-{{vitaUser.to-delete}}">
             <span>Name: {{vitaUser.name}}</span>&nbsp;
             <span>Age: {{vitaUser.age}}</span>&nbsp;
             <span>EDIT</span>&nbsp;
-            <span data-vita-click="#model vitaUsers.remove(vitaUser)">DELETE</span>&nbsp;
-            <span data-vita-click="#controller markAsDelete(vitaUser)">Mark As Delete</span>
+            <span data-vita-click="model.vitaUsers.remove(vitaUser)">DELETE</span>&nbsp;
+            <span data-vita-click="controller.markAsDelete(vitaUser)">Mark As Delete</span>
         </div>
     </div>
-    <button class="btn btn-small btn-primary" data-vita-click="#controller deleteMarkedUsers()">Delete marked users</button>
+    <button class="btn btn-small btn-primary" data-vita-click="controller.deleteMarkedUsers()">Delete marked users</button>
 </div>

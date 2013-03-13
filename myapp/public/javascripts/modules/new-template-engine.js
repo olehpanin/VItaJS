@@ -79,40 +79,17 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             if (tr.indexOf('#') === 0) {
 
             } else {
-                return this.getScopeVal(tr, el, $scope, controller, cashedElData, setter);
-            }
-        },
+                var trArr= tr.split('.'),
+                    scopeKey = trArr.shift();
 
-        getExObj : function(str, el, controller, $scope) {
-            var arr = u.without(str.split(/[\(, \)]/), ''),
-                module = arr.shift(),
-                func = arr.shift(),
-                funcArr,
-                paramsArr= [];
+                if (scopeKey in $scope) {
+                    return this.getScopeVal(tr, el, $scope, controller, cashedElData, setter);
+                } else {
+                    console.warn(tr);
+                    var obj = this.getValueFromAttr(tr, controller, $scope);
+                    return obj.func.call(obj.context, obj.params);
+                }
 
-            u.forEach(arr, function(val) {
-                if (val in $scope) val = $scope[val].model;
-                paramsArr.push(val);
-            });
-
-            //console.log(module, func, arr);
-            switch (module) {
-                case '#controller' :
-                    paramsArr.unshift(el);
-                    return {
-                        function : controller[func],
-                        params : paramsArr,
-                        context : controller
-                    };
-                case '#model' :
-                    funcArr = func.split('.');
-                    return {
-                        function : controller.model.get(funcArr[0])[funcArr[1]],
-                        params : paramsArr,
-                        context : controller.model.get(funcArr[0])
-                    };
-                default:
-                    break;
             }
         },
 
@@ -157,7 +134,8 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
                 if (el.childNodes.length > 0) {
                     context.iterate(el, controller, $scope);
                 } else if (context.isTextNode(el) && context.isBind(el.data)) {
-                    el.data = el.data.replace(/{{[\w#.]*}}/g, function(tr) {
+                    el.data = el.data.replace(/{{[\w#.()]*}}/g, function(tr) {
+                        console.info(tr)
                         return context.executeModule(tr.substr(2, tr.length - 4), el, $scope, controller,
                             el.data, function(el, val) {
                                 el.data = val;
@@ -171,19 +149,74 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
             $scope = u.isObject($scope) ? $scope : {};
             this.checkAttrs(head, controller, $scope);
             this.iterate(head, controller, $scope);
+        },
+
+        getValueFromAttr : function(str, controller, $scope) {
+            var strArr = str.split('.'),
+                instance = strArr.shift(),
+                modelVar,
+                retObj = {};
+            console.log('$scope', $scope);
+            function parse(arr, instance) {
+                var el,
+                    obj = instance,
+                    first,
+                    key,
+                    params,
+                    paramsArr;
+
+                function getParams(arr) {
+                    console.log('--arr', arr)
+                    var params = [];
+
+                    u.forEach(arr, function(val) {
+                        if (val in $scope) params.push($scope[val].model);
+                    });
+
+                    return params;
+                }
+
+                while (el = arr.shift()) {
+                    //console.log(el.indexOf(')'), el.length, el);
+                    if (el.indexOf(')') === el.length - 1) {
+                        first = el.indexOf('(');
+                        key = el.substr(0, first);
+                        params = el.substr(first + 1, el.length - first - 2);
+                        paramsArr = params.indexOf(', ') === -1 ? getParams(params.split(', ')) : [];
+
+                        obj = arr.length > 0 ? obj[key].apply(instance, params) : obj[key];
+                        console.log(el, 'key', key, 'params', params);
+                    }
+                }
+
+                return {
+                    func : obj,
+                    params : paramsArr,
+                    context : instance
+                }
+            }
+
+            if (instance === 'controller') {
+                retObj = parse(strArr, controller);
+            } else if(instance === 'model') {
+                modelVar = controller.model.get(strArr.shift());
+                retObj = parse(strArr, modelVar);
+            }
+            console.log('retObj', retObj);
+            return retObj;
         }
 
     };
 
-    retObj.addAttrModule('data-vita-repeat', function(el, attr, controller) {
+    retObj.addAttrModule('data-vita-repeat', function(el, attr, controller, $scope) {
         var repeatArr = attr.split(' in '),
             scopeVal = repeatArr.shift(),
             param = repeatArr.shift(),
-            collection = controller.model.get(param),
+            collection = this.getValueFromAttr(param, controller, $scope).func,
             cloneEl = el.cloneNode(),
             self = this;
 
-        function go(collection, el, cloneEl) {;
+        function go(collection, el, cloneEl) {
             var cloneChildNode;
 
             el.innerHTML = '';
@@ -212,14 +245,15 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
 
     }, true);
 
-    retObj.addAttrModule('data-vita-form', function(el, dataModelFormAttr, controller) {
+    retObj.addAttrModule('data-vita-form', function(el, dataModelFormAttr, controller, $scope) {
+        var self = this;
+
         $(el).on('submit', function(e) {
             var i,
                 nodeType,
                 setObj = {},
                 key,
-                value,
-                fieldType;
+                value;
 
             for (i = 0; i < e.target.length; i++ ) {
                 nodeType = e.target[i].getAttribute('type');
@@ -256,24 +290,28 @@ answer('new-template-engine', ['s#utils', 's#dom-core'], function(u, $) {
                 }
             }
 
-            //console.log(setObj);
-
-            controller.model.get(dataModelFormAttr).push(setObj);
+            //console.log(setObj)
+            self.getValueFromAttr(dataModelFormAttr, controller, $scope).func.push(setObj);
             el.reset();
             return false;
-        })
+        });
     });
 
     retObj.addAttrModule('data-vita-click', function(el, attr, controller, $scope) {
         //console.log('data-vita-click', attr, el, $scope);
         var self = this,
-            exObj = this.getExObj(attr, el, controller, $scope);
+            //exObj = this.getExObj(attr, el, controller, $scope);
+            exObj = this.getValueFromAttr(attr, controller, $scope);
 
         //console.log(attr, exObj);
         $(el).on('click', function(e) {
             //console.log(exObj.function)
-            exObj.function.apply(exObj.context, exObj.params);
+            exObj.func.apply(exObj.context, exObj.params);
         });
+    });
+
+    retObj.addAttrModule('data-vita-event', function(el, attr, controller, $scope) {
+
     });
 
     return retObj;
